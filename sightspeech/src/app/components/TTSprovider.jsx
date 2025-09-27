@@ -9,29 +9,20 @@ export function TTSProvider({ children }) {
   const { languages, voices } = useVoices();
   const [lang, setLang] = useState("en-US");
   const [voiceURI, setVoiceURI] = useState("Google US English");
-  const [text, setText] = useState("This library is awesome!");
+  const [text, setText] = useState("");
 
-  const { speechStatus, start, pause, stop } = useSpeech({
-    text,
-    lang,
-    voiceURI,
-  });
+  const { start } = useSpeech({ text, lang, voiceURI });
+
+  // Function to update text AND speak immediately
+  const speakText = (newText) => {
+    setText(newText);
+    start();
+  };
 
   return (
     <TTSContext.Provider
       value={{
-        languages,
-        voices,
-        lang,
-        setLang,
-        voiceURI,
-        setVoiceURI,
-        text,
-        setText,
-        speechStatus,
-        start,
-        pause,
-        stop,
+        speakText,
       }}
     >
       {children}

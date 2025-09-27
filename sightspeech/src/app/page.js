@@ -1,13 +1,17 @@
-// import Image from "next/image";
+"use client";
+
 import GestureCamera from "./gestureCam";
-import TestAPI from "./components/TestAPI";
+import { TTSProvider } from "./components/TTSprovider";
+import ReadFromBackend from "./components/ReadFromBackend";
 
 export default function Page() {
   return (
-    <main style={{ padding: '20px', textAlign: 'center' }}>
-      <h1>Hand Gesture Recognition Demo</h1>
-      <GestureCamera />
-      <TestAPI />
-    </main>
+    <TTSProvider>
+      <main style={{ padding: "20px" }}>
+        <h1>Simple Backend TTS Demo</h1>
+        <ReadFromBackend />
+        <GestureCamera />
+      </main>
+    </TTSProvider>
   );
 }

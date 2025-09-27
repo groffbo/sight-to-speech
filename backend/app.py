@@ -24,6 +24,12 @@ def process_frame():
         "ocr_result": {"text": "Detected text from dummy OCR"}
     })
 
+@app.route("/api/get-text-to-read", methods=["GET"])
+def get_text_to_read():
+    # Example: replace with your logic for current word
+    return jsonify({"text": "Hello, this is a test from the backend"})
+
+
 if __name__ == "__main__":
     app.run(debug=True, port=5000)
 

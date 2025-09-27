@@ -1,7 +1,6 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
-import { TTSProvider } from "./contexts/TTSprovider";
-import { STTProvider } from "./contexts/STTprovider";
+import { TTSProvider } from "./components/TTSprovider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -25,9 +24,7 @@ export default function RootLayout({ children }) {
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <TTSProvider>
-          <STTProvider>
             {children}
-          </STTProvider>
         </TTSProvider>
       </body>
     </html>
