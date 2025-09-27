@@ -7,6 +7,7 @@ export default function Page() {
     <main style={{ padding: '20px', textAlign: 'center' }}>
       <h1>Hand Gesture Recognition Demo</h1>
       <GestureCamera />
+      <TestAPI />
     </main>
   );
 }
