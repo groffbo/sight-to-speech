@@ -40,6 +40,26 @@ const isPointingLeft = (landmarks) => {
     return indexExtended && middleFolded && ringFolded && pinkyFolded && pointingLeft;
   };  
 
+  const sendKeyPress = (key) => {
+    const event = new KeyboardEvent("keydown", {
+      key,
+      code: key,
+      keyCode: key.charCodeAt(0),
+      bubbles: true,
+    });
+    document.dispatchEvent(event);
+  };
+  
+  const sendKeyRelease = (key) => {
+    const event = new KeyboardEvent("keyup", {
+      key,
+      code: key,
+      keyCode: key.charCodeAt(0),
+      bubbles: true,
+    });
+    document.dispatchEvent(event);
+  };
+
 // --- DRAWING UTILITIES START ---
 // Define the connections for the hand landmarks (from MediaPipe documentation)
 const HAND_CONNECTIONS = [
@@ -185,7 +205,7 @@ const BUFFER_SIZE = 20;
             const handedness = results.handednesses[index][0]?.categoryName || 'Unknown';
 
             if (isOGesture(landmarks)) detectedGesture = "O";
-            else if (isPointingLeft(landmarks)) detectedGesture = "Pointing Left";
+            else if (isPointingLeft(landmarks)) detectedGesture = "Pointing_Left";
 
             // update gesture buffer
             gestureBuffer.current.push(detectedGesture);
@@ -224,8 +244,48 @@ const BUFFER_SIZE = 20;
 
   useEffect(() => {
     if (stableGesture !== "No Gesture") {
-      console.log("Gesture changed to:", stableGesture);
-      // logic here (e.g., trigger event, send API call, etc.)
+      console.log("Stable gesture changed to:", stableGesture);
+  
+      switch (stableGesture) {
+        case "Open_Palm":
+          sendKeyPress("C");
+          sendKeyRelease("C");
+          console.log("Hitting the letter C");
+          break;
+  
+        case "Closed_Fist": // NOT ASSIGNED YET
+          sendKeyPress("S");
+          sendKeyRelease("S");
+          console.log("Hitting the letter S");
+          break;
+  
+        case "Pointing_Up":
+          sendKeyPress("N");
+          sendKeyRelease("N");
+          console.log("Hitting the letter N");
+          break;
+  
+        case "Pointing_Left":
+          sendKeyPress("B");
+          sendKeyRelease("B");
+          console.log("Hitting the letter B");
+          break;
+
+        case "O": // NOT ASSIGNED YET
+          sendKeyPress("R");
+          sendKeyRelease("R");
+          console.log("Hitting the letter R");
+          break;
+
+        case "Victory":
+          sendKeyPress("V");
+          sendKeyRelease("V");
+          console.log("Hitting the letter V");
+          break;
+  
+        default:
+          console.log("No key mapping for this gesture.");
+      }
     }
   }, [stableGesture]);
 
