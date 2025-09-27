@@ -1,0 +1,28 @@
+# ---- Python ----
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# ---- Flask / Gunicorn ----
+instance/
+*.log
+
+# ---- Node / React ----
+node_modules/
+build/
+dist/
+*.lock
+
+# ---- Environment / Secrets ----
+.env
+*.env
+
+# ---- OS / Editor Junk ----
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
