@@ -2,6 +2,44 @@
 import React, { useRef, useEffect, useState } from 'react';
 import { GestureRecognizer, FilesetResolver } from '@mediapipe/tasks-vision';
 
+// Distance between two landmarks
+const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
+
+// Check if finger is extended (tip farther from palm than base joint)
+const isFingerExtended = (landmarks, tipIndex, baseIndex = 0) => {
+  return distance(landmarks[tipIndex], landmarks[0]) >
+         distance(landmarks[baseIndex], landmarks[0]);
+};
+
+const isOGesture = (landmarks) => {
+    const thumbTip = landmarks[4];
+    const indexTip = landmarks[8];
+    const palmBase = landmarks[0];
+  
+    const palmSize = distance(landmarks[0], landmarks[9]); // rough scale
+    const thumbIndexDist = distance(thumbTip, indexTip);
+  
+    return thumbIndexDist < palmSize * 0.3; // adjust threshold
+  };
+
+const isPointingLeft = (landmarks) => {
+    const indexTip = landmarks[8];
+    const indexBase = landmarks[5];
+    
+    // 1. Index finger extended
+    const indexExtended = isFingerExtended(landmarks, 8, 5);
+  
+    // 2. Other fingers curled
+    const middleFolded = !isFingerExtended(landmarks, 12, 9);
+    const ringFolded   = !isFingerExtended(landmarks, 16, 13);
+    const pinkyFolded  = !isFingerExtended(landmarks, 20, 17);
+  
+    // 3. Index points left (tip.x significantly < base.x)
+    const pointingLeft = (indexTip.x + 0.05) < indexBase.x;
+  
+    return indexExtended && middleFolded && ringFolded && pinkyFolded && pointingLeft;
+  };  
+
 // --- DRAWING UTILITIES START ---
 // Define the connections for the hand landmarks (from MediaPipe documentation)
 const HAND_CONNECTIONS = [
@@ -14,7 +52,7 @@ const HAND_CONNECTIONS = [
 
 // Helper to draw lines between connected landmarks
 const drawConnectors = (ctx, landmarks, connections) => {
-    ctx.strokeStyle = '#000000'; // Cyan color for connections
+    ctx.strokeStyle = '#000000';
     ctx.lineWidth = 4;
     for (const connection of connections) {
         const start = landmarks[connection[0]];
@@ -51,6 +89,11 @@ const GestureCamera = () => {
   const canvasRef = useRef(null);
   const [gestureRecognizer, setGestureRecognizer] = useState(null);
   const [lastVideoTime, setLastVideoTime] = useState(-1);
+
+// gesture buffer state
+const [stableGesture, setStableGesture] = useState("No Gesture"); 
+const gestureBuffer = useRef([]);
+const BUFFER_SIZE = 20;
 
   // Initialize GestureRecognizer Model
   useEffect(() => {
@@ -133,17 +176,31 @@ const GestureCamera = () => {
         if (results.landmarks.length > 0) {
           results.landmarks.forEach((landmarks, index) => {
             
-            drawConnectors(ctx, landmarks, HAND_CONNECTIONS);
+            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, '#000000');
             drawLandmarks(ctx, landmarks);
             
             // Display the recognized gesture label
-            const gesture = results.gestures[index][0]?.categoryName || 'No Gesture';
+            let detectedGesture = results.gestures[index][0]?.categoryName || "No Gesture";
+            // const gesture = results.gestures[index][0]?.categoryName || 'No Gesture';
             const handedness = results.handednesses[index][0]?.categoryName || 'Unknown';
 
+            if (isOGesture(landmarks)) detectedGesture = "O";
+            else if (isPointingLeft(landmarks)) detectedGesture = "Pointing Left";
+
+            // update gesture buffer
+            gestureBuffer.current.push(detectedGesture);
+            if (gestureBuffer.current.length > BUFFER_SIZE) {
+              gestureBuffer.current.shift();
+            }
+            const allSame = gestureBuffer.current.every(g => g === detectedGesture);
+            if (allSame && detectedGesture !== stableGesture) {
+              setStableGesture(detectedGesture);
+            }
+
             ctx.font = '24px Roboto';
-            ctx.fillStyle = 'magenta';
+            ctx.fillStyle = 'black';
             ctx.fillText(
-                `${handedness}: ${gesture} : ${index}`,
+                `${handedness}: ${detectedGesture}`,
                 50,
                 50 + index * 40 // Offset based on hand index
             );
@@ -165,6 +222,12 @@ const GestureCamera = () => {
     };
   }, [gestureRecognizer]);
 
+  useEffect(() => {
+    if (stableGesture !== "No Gesture") {
+      console.log("Gesture changed to:", stableGesture);
+      // logic here (e.g., trigger event, send API call, etc.)
+    }
+  }, [stableGesture]);
 
   return (
     <div style={{ position: 'relative', width: '640px', height: '480px', margin: 'auto' }}>
