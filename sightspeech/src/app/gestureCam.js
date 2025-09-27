@@ -40,25 +40,31 @@ const isPointingLeft = (landmarks) => {
     return indexExtended && middleFolded && ringFolded && pinkyFolded && pointingLeft;
   };  
 
-  const sendKeyPress = (key) => {
+  const sendKeyPress = (key, code, keyCode) => {
     const event = new KeyboardEvent("keydown", {
-      key,
-      code: key,
-      keyCode: key.charCodeAt(0),
+      key,      // "c"
+      code,     // "KeyC"
       bubbles: true,
     });
+  
+    Object.defineProperty(event, "keyCode", { value: keyCode });
+    Object.defineProperty(event, "which", { value: keyCode });
+  
     document.dispatchEvent(event);
   };
   
-  const sendKeyRelease = (key) => {
+  const sendKeyRelease = (key, code, keyCode) => {
     const event = new KeyboardEvent("keyup", {
       key,
-      code: key,
-      keyCode: key.charCodeAt(0),
+      code,
       bubbles: true,
     });
+  
+    Object.defineProperty(event, "keyCode", { value: keyCode });
+    Object.defineProperty(event, "which", { value: keyCode });
+  
     document.dispatchEvent(event);
-  };
+  };  
 
 // --- DRAWING UTILITIES START ---
 // Define the connections for the hand landmarks (from MediaPipe documentation)
@@ -110,10 +116,30 @@ const GestureCamera = () => {
   const [gestureRecognizer, setGestureRecognizer] = useState(null);
   const [lastVideoTime, setLastVideoTime] = useState(-1);
 
-// gesture buffer state
-const [stableGesture, setStableGesture] = useState("No Gesture"); 
-const gestureBuffer = useRef([]);
-const BUFFER_SIZE = 20;
+  // gesture buffer state
+  const [stableGesture, setStableGesture] = useState("No Gesture"); 
+  const gestureBuffer = useRef([]);
+  const BUFFER_SIZE = 20;
+
+  // check for key pressed
+  useEffect(() => {
+    // This function will run any time a keydown event is detected
+    const handleKeyDown = (event) => {
+        // Log the key details to the console
+        console.groupCollapsed(`[KEY DETECTED] Key: ${event.key} | Code: ${event.code}`);
+        console.log("Full Event Object:", event);
+        console.log("Type:", event.type);
+        console.groupEnd();
+    };
+
+    // Attach the listener to the entire document
+    document.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup: Remove the listener when the component unmounts
+    return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []); 
 
   // Initialize GestureRecognizer Model
   useEffect(() => {
@@ -248,38 +274,38 @@ const BUFFER_SIZE = 20;
   
       switch (stableGesture) {
         case "Open_Palm":
-          sendKeyPress("C");
-          sendKeyRelease("C");
+          sendKeyPress("c", "KeyC", 67);
+          sendKeyRelease("c", "KeyC", 67);
           console.log("Hitting the letter C");
           break;
   
-        case "Closed_Fist": // NOT ASSIGNED YET
-          sendKeyPress("S");
-          sendKeyRelease("S");
+        case "Closed_Fist":
+          sendKeyPress("s", "KeyS", 83);
+          sendKeyRelease("s", "KeyS", 83);
           console.log("Hitting the letter S");
           break;
   
         case "Pointing_Up":
-          sendKeyPress("N");
-          sendKeyRelease("N");
+          sendKeyPress("n", "KeyN", 78);
+          sendKeyRelease("n", "KeyN", 78);
           console.log("Hitting the letter N");
           break;
   
         case "Pointing_Left":
-          sendKeyPress("B");
-          sendKeyRelease("B");
+          sendKeyPress("b", "KeyB", 66);
+          sendKeyRelease("b", "KeyB", 66);
           console.log("Hitting the letter B");
           break;
-
-        case "O": // NOT ASSIGNED YET
-          sendKeyPress("R");
-          sendKeyRelease("R");
+  
+        case "O":
+          sendKeyPress("r", "KeyR", 82);
+          sendKeyRelease("r", "KeyR", 82);
           console.log("Hitting the letter R");
           break;
-
+  
         case "Victory":
-          sendKeyPress("V");
-          sendKeyRelease("V");
+          sendKeyPress("v", "KeyV", 86);
+          sendKeyRelease("v", "KeyV", 86);
           console.log("Hitting the letter V");
           break;
   
@@ -287,7 +313,7 @@ const BUFFER_SIZE = 20;
           console.log("No key mapping for this gesture.");
       }
     }
-  }, [stableGesture]);
+  }, [stableGesture]);  
 
   return (
     <div style={{ position: 'relative', width: '640px', height: '480px', margin: 'auto' }}>
