@@ -87,10 +87,40 @@ def video_feed():
     return Response(gen_mjpeg(),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
 
-@app.route('/data', methods=['GET'])
-def get_data():
+@app.route('/data/words', methods=['GET'])
+def get_data_words():
     global latest_words
-    print("GET /data called, returning:", latest_words)  # debug
+    # Capture a frame from the camera here, or reuse last frame
+    ret, frame = cap.read()
+    if not ret:
+        return jsonify({"words": []})
+
+    GEMINI_STRUCTURED_PROMPT = (
+        "Analyze this image and extract all visible words. "
+        "Return the result as a strict JSON array of strings, "
+        "ordered left-to-right, line-by-line."
+    )
+    words = capture_and_send_to_gemini(frame, GEMINI_STRUCTURED_PROMPT, is_structured_output=True)
+    if words:
+        latest_words = words
+    return jsonify({"words": latest_words})
+
+
+@app.route('/data/sentences', methods=['GET'])
+def get_data_sentences():
+    global latest_words
+    # Capture a frame from the camera here, or reuse last frame
+    ret, frame = cap.read()
+    if not ret:
+        return jsonify({"words": []})
+
+    GEMINI_SENTENCE_PROMPT = (
+        "Analyze this image of written text and return logical groupings "
+        "of contextual sentences or headers. Return a JSON array of strings."
+    )
+    sentences = capture_and_send_to_gemini(frame, GEMINI_SENTENCE_PROMPT, is_structured_output=True)
+    if sentences:
+        latest_words = sentences
     return jsonify({"words": latest_words})
 
 @app.route('/data', methods=['POST'])
@@ -156,7 +186,7 @@ def capture_and_send_to_gemini(frame, user_prompt: str, is_structured_output: bo
                     API_URL, 
                     headers=config_headers, 
                     data=json.dumps(payload),
-                    timeout=20 
+                    timeout=20
                 )
                 response.raise_for_status() 
                 break 
