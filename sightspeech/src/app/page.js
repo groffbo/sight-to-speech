@@ -47,11 +47,8 @@ export default function Page() {
           <div className="mx-auto w-[80%] h-[80%] max-w-5xl border-8 m-5 items-center">
             <GestureCamera className="w-full h-full"/>
           </div>
-        <div className="w-[80%] h-[80%] max-w-5xl border-6 border-black-700 m-5">
-          <GestureCamera/>
-        </div>
           <SpeechGestureToggle className="absolute bottom-6 right-6 z-30 w-24 h-24" onClick={() => setUseGestures(!useGestures)} >
-            <div className="mx-auto">{(useGestures) ? <img src="/speech.png" className="h-14 w-14"/> : <img src="/gesture.png" className="h-18 w-18"/>}</div>
+            <div className="mx-auto">{(!useGestures) ? <img src="/speech.png" className="h-14 w-14"/> : <img src="/gesture.png" className="h-18 w-18"/>}</div>
           </SpeechGestureToggle>
         </main>
       </div>
