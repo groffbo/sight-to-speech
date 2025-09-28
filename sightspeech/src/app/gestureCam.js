@@ -16,10 +16,11 @@ const isOGesture = (landmarks) => {
     const indexTip = landmarks[8];
     const palmBase = landmarks[0];
   
-    const palmSize = distance(landmarks[0], landmarks[9]); // rough scale
+    const palmSize = distance(palmBase, landmarks[9]); // rough scale
     const thumbIndexDist = distance(thumbTip, indexTip);
+    const thumbPalmDist = distance(thumbTip, landmarks[9]) * 0.75
   
-    return thumbIndexDist < palmSize * 0.3; // adjust threshold
+    return thumbIndexDist < palmSize * 0.3 && thumbPalmDist > palmSize * 0.39 && thumbPalmDist < palmSize * 0.52; // tuned threshold to reduce error
   };
 
 const isPointingLeft = (landmarks) => {
@@ -72,7 +73,7 @@ const HAND_CONNECTIONS = [
 
 // Helper to draw lines between connected landmarks
 const drawConnectors = (ctx, landmarks, connections) => {
-    ctx.strokeStyle = '#000000';
+    ctx.strokeStyle = '#b1e2fc';
     ctx.lineWidth = 4;
     for (const connection of connections) {
         const start = landmarks[connection[0]];
@@ -113,7 +114,7 @@ const GestureCamera = () => {
 // gesture buffer state
 const [stableGesture, setStableGesture] = useState("No Gesture"); 
 const gestureBuffer = useRef([]);
-const BUFFER_SIZE = 20;
+const BUFFER_SIZE = 50;
 
   // Initialize GestureRecognizer Model
   useEffect(() => {
@@ -204,6 +205,13 @@ const BUFFER_SIZE = 20;
             // const gesture = results.gestures[index][0]?.categoryName || 'No Gesture';
             const handedness = results.handednesses[index][0]?.categoryName || 'Unknown';
 
+            // const touching = isThumbIndexTouching(landmarks);
+            // const dShape   = isASLDShape(landmarks);
+
+            // if (touching && dShape) {
+            //   console.log("Thumb + Index touching in D shape");
+            // }
+            // else if (isOGesture(landmarks)) detectedGesture = "O";
             if (isOGesture(landmarks)) detectedGesture = "O";
             else if (isPointingLeft(landmarks)) detectedGesture = "Pointing_Left";
 
@@ -242,75 +250,92 @@ const BUFFER_SIZE = 20;
     };
   }, [gestureRecognizer]);
 
+  const [blink, setBlink] = useState(false);
+
   useEffect(() => {
-    if (stableGesture !== "No Gesture") {
-      console.log("Stable gesture changed to:", stableGesture);
+    if (stableGesture === "No Gesture") return;
   
-      switch (stableGesture) {
-        case "Open_Palm":
-          sendKeyPress("C");
-          sendKeyRelease("C");
-          console.log("Hitting the letter C");
-          break;
+    let key;
+    switch (stableGesture) {
+      case "Open_Palm":
+        key = "C";
+        break;
+      case "Closed_Fist":
+        key = "S";
+        break;
+      case "Victory":
+        key = "V";
+        break;
+      case "Pointing_Up":
+        key = "N";
+        break;
+      case "Pointing_Left":
+        key = "B";
+        break;
+      case "O":
+        key = "R";
+        break;
+      default:
+        key = null;
+    }
   
-        case "Closed_Fist": // NOT ASSIGNED YET
-          sendKeyPress("S");
-          sendKeyRelease("S");
-          console.log("Hitting the letter S");
-          break;
+    if (!key) return;
   
-        case "Pointing_Up":
-          sendKeyPress("N");
-          sendKeyRelease("N");
-          console.log("Hitting the letter N");
-          break;
+    // repeating gestures (15s pulse)
+    if (["Pointing_Up"].includes(stableGesture)) {
+      // call once immediately
+      sendKeyPress(key);
+      sendKeyRelease(key);
+      console.log("Hitting the letter", key);
   
-        case "Pointing_Left":
-          sendKeyPress("B");
-          sendKeyRelease("B");
-          console.log("Hitting the letter B");
-          break;
-
-        case "O": // NOT ASSIGNED YET
-          sendKeyPress("R");
-          sendKeyRelease("R");
-          console.log("Hitting the letter R");
-          break;
-
-        case "Victory":
-          sendKeyPress("V");
-          sendKeyRelease("V");
-          console.log("Hitting the letter V");
-          break;
+      // then repeat every 15s
+      const interval = setInterval(() => {
+        sendKeyPress(key);
+        sendKeyRelease(key);
+        console.log("Hitting the letter", key);
+      }, 1500); // 15s interval
   
-        default:
-          console.log("No key mapping for this gesture.");
-      }
+      return () => clearInterval(interval);
+    }
+  
+    // one-shot gestures
+    if (["Open_Palm", "Closed_Fist", "Victory"].includes(stableGesture)) {
+      sendKeyPress(key);
+      sendKeyRelease(key);
+      console.log("Hitting the letter", key);
+  
+      setBlink(true);
+      setTimeout(() => setBlink(false), 300);
     }
   }, [stableGesture]);
+  
+  
 
   return (
-     <div className="relative w-full h-full mx-auto">
-      {/* Video base layer */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        className="w-full h-full transform scale-x-[-1]" // mirror with Tailwind arbitrary value
-      />
-
-      {/* Canvas overlay */}
-      <canvas
-        ref={canvasRef}
-        className="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1]" // keep in sync with video
-      />
-
-      {!gestureRecognizer && (
-        <p className="absolute left-0 top-1/2 w-full -translate-y-1/2 text-center text-white bg-black/50 py-2">
-          Loading Hand Gesture Model...
-        </p>
-      )}
-    </div>
+    <div
+    className={`relative w-full h-full mx-auto rounded-xl 
+      ${blink ? "ring-blink" : ""}
+    `}>
+    {/* Video base layer */}
+    <video
+      ref={videoRef}
+      autoPlay
+      playsInline
+      className="w-full h-full transform scale-x-[-1] rounded-xl"
+    />
+  
+    {/* Canvas overlay */}
+    <canvas
+      ref={canvasRef}
+      className="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1] rounded-xl"
+    />
+  
+    {!gestureRecognizer && (
+      <p className="absolute left-0 top-1/2 w-full -translate-y-1/2 text-center text-white bg-black/50 py-2">
+        Loading Hand Gesture Model...
+      </p>
+    )}
+  </div>
   );
 };
 
