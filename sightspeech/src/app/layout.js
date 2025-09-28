@@ -28,7 +28,7 @@ export default function RootLayout({ children }) {
       </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <TTSProvider>
-            {children}
+          {children}
         </TTSProvider>
       </body>
     </html>
