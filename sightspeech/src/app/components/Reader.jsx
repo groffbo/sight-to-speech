@@ -28,7 +28,7 @@ const Reader = ({ gesture }) => {
       }
     };
 
-    if (gesture === "Open_Palm") {
+    if (gesture === "Pointing_Up") {
       fetchWords();
     }
   }, [gesture]); // triggers only when gesture changes
@@ -39,7 +39,7 @@ const Reader = ({ gesture }) => {
   useEffect(() => {
     if (!gesture || words.length === 0) return;
 
-    if (gesture === "forward") {
+    if (gesture === "Pointing_Up") {
       setCurrentIndex((prev) => {
         if (prev < words.length - 1) {
           const newIndex = prev + 1;
@@ -50,7 +50,7 @@ const Reader = ({ gesture }) => {
           return prev;
         }
       });
-    } else if (gesture === "backward") {
+    } else if (gesture === "Pointing_Left") {
       setCurrentIndex((prev) => {
         if (prev > 0) {
           const newIndex = prev - 1;
@@ -61,7 +61,7 @@ const Reader = ({ gesture }) => {
           return prev;
         }
       });
-    } else if (gesture === "repeat") {
+    } else if (gesture === "O-Shape") {
       speakText(words[currentIndex]);
     }
   }, [gesture, words]);
