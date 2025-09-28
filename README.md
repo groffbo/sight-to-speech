@@ -63,13 +63,11 @@ Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visual
 
 ## 🖐 Gesture Mapping (Default)
 
-| Gesture         | Simulated Key | Description / Use |
-| --------------- | ------------- | ----------------- |
-| `Open_Palm`     | `c`           | (You logged “C”)  |
-| `Closed_Fist`   | `s`           | (You logged “S”)  |
-| `Pointing_Up`   | `n`           | (You logged “N”)  |
-| `Pointing_Left` | `b`           | (You logged “B”)  |
-| `O`             | `r`           | (You logged “R”)  |
-| `Victory`       | `v`           | (You logged “V”)  |
+| Gesture         | Description / Use |
+| --------------- | ----------------- |
+| `Open_Palm`     | Start             |
+| `Closed_Fist`   | Description       |
+| `Pointing_Up`   | Tab               |
+| `Pointing_Left` | Backwards Tab     |
 
 You can adjust these mappings in the React `useEffect` that handles `stableGesture`.
