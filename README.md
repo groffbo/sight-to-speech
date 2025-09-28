@@ -1,101 +1,71 @@
-# SightSpeech
+# SightSpeech / Sight-to-Speech
 
-SightSpeech is a two-part application:  
-- **Backend**: Flask (Python)  
-- **Frontend**: React (Next.js)  
-
-You should start the backend first, then run the frontend.
+**A React app that reads words aloud from a camera feed, controlled by hand gestures from legally blind users.**  
+Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visually impaired users to access visual text in their environment.  
 
 ---
 
-## Quick Start
+## ✨ Features
 
-```bash
-# Backend setup
-cd backend
-python -m venv venv
-# macOS/Linux
-source venv/bin/activate
-# Windows
-venv\Scripts\activate
-pip install -r requirements.txt
-flask run
-
-# In another terminal (frontend setup)
-cd sightspeech
-npm install   # only first time
-npm run dev
-```
+- Real-time camera capture and processing  
+- Hand gesture recognition (e.g. “point left”, “O”, open palm)  
+- OCR (text recognition) on camera frames  
+- Text-to-speech output to read recognized words aloud  
+- Lightweight fallback and buffering to avoid flicker errors  
 
 ---
 
-## Backend (Flask)
+## 🏗 Architecture & Components
 
-1. **Navigate into the backend folder**
+| Component | Responsibility |
+|----------|-----------------|
+| **Frontend (React / Next.js / “use client”)** | Captures video, draws landmarks, sends gestures |
+| **Gesture Recognizer (MediaPipe Tasks–Vision)** | Detects hand landmarks & base gesture categories |
+| **Custom Gesture Overrides** | Rules-based detection for “O”, “point left”, etc. |
+| **Stable Gesture Buffering** | Avoids flicker by requiring consistent predictions |
+| **Keypress Simulation** | Emits synthetic key events mapped to gestures |
+| **Backend / OCR / TTS (Flask or similar)** | Processes camera frames, runs OCR, reads text aloud |
+
+---
+
+## 🛠️ Setup & Run
+
+1. **Clone the repo**  
    ```bash
-   cd backend
+   git clone https://github.com/groffbo/sight-to-speech.git
+   cd sight-to-speech
    ```
-
-2. **Create a Python virtual environment**
+2. **Clone the repo**  
    ```bash
-   python -m venv venv
+   python3 -m venv venv
+   source venv/bin/activate   # On macOS/Linux
+   venv\Scripts\activate      # On Windows PowerShell
    ```
-   > This keeps dependencies isolated, so you don’t pollute your global Python install.
-
-3. **Activate the virtual environment**
-   - On **macOS/Linux**:
-     ```bash
-     source venv/bin/activate
-     ```
-   - On **Windows**:
-     ```bash
-     venv\Scripts\activate
-     ```
-
-4. **Install dependencies**
+3. **Clone the repo**  
    ```bash
+   pip install --upgrade pip
    pip install -r requirements.txt
    ```
-
-5. **Run the Flask server**
+4. **Clone the repo**  
    ```bash
-   flask run
+   python3 app.py
    ```
-   The backend will be available at:  
-   ```
-   http://127.0.0.1:5000
-   ```
-
----
-
-## Frontend (React/Next.js)
-
-1. **Navigate into the frontend folder**
-   ```bash
-   cd sightspeech
-   ```
-
-2. **Install dependencies** (only the first time)
+5. **Clone the repo**  
    ```bash
    npm install
-   ```
-
-3. **Start the development server**
-   ```bash
    npm run dev
    ```
-   The frontend will be available at:  
-   ```
-   http://localhost:3000
-   ```
+   or `yarn dev` depending on your setup.
+6. **Clone the repo**  
+   Go to `http://localhost:3000` (or whatever port your frontend uses). Allow camera access.
 
 ---
 
-## Notes & Common Issues
+## 🖐 Gesture Mapping (Default)
 
-- Make sure the **backend is running** before starting the frontend.  
-- On macOS, using `localhost` may sometimes fail when connecting to Flask. Use `127.0.0.1` instead.  
-- If you add new Python packages, update `requirements.txt` with:
-  ```bash
-  pip freeze > requirements.txt
-  ```
+| Gesture         | Description / Use |
+| --------------- | ----------------- |
+| `Open_Palm`     | Start             |
+| `Closed_Fist`   | Description       |
+| `Pointing_Up`   | Tab               |
+| `Pointing_Left` | Backwards Tab     |
