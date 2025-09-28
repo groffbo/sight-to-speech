@@ -12,7 +12,7 @@ const SentenceWordToggle = ({ onToggle, className }) => {
 
   return (
     <label className={`flex flex-wrap justify-center cursor-pointer p-3 ${className}`}>
-      <span className=" text-gray-700 text-2xl items-center pr-5">Use Sentences</span>
+      <span className=" text-[#4d88a9] text-2xl font-bold items-center pr-5">Use Sentences</span>
       <div className="relative">
         <input
           type="checkbox"

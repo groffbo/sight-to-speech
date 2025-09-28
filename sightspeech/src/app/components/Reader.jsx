@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useTTS } from "./TTSprovider";
 import SentenceWordToggle from "./SentenceWordToggle";
 
-const Reader = ({ gesture }) => {
+const Reader = ({ gesture, command }) => {
   const [useSentences, setUseSentences] = useState(false); // "words" | "sentences"
   const [items, setItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -44,6 +44,8 @@ const Reader = ({ gesture }) => {
   }
 };
 
+
+
     if (gesture === "Open_Palm") {
       fetchItems();
     }
@@ -80,10 +82,43 @@ const Reader = ({ gesture }) => {
     }
   }, [gesture, items, speakText]);
 
+
+  useEffect(() => {
+     if (!command || items.length === 0) return;
+
+    if (command === 'play') {
+      console.log("Play items")
+      setCurrentIndex((prev) => {
+        if (prev < items.length - 1) {
+          const newIndex = prev + 1;
+          speakText(items[newIndex]);
+          return newIndex;
+        } else {
+          speakText("End of text");
+          return prev;
+        }
+      });
+    } else if (command === 'back') {
+      setCurrentIndex((prev) => {
+        if (prev > 0) {
+          const newIndex = prev - 1;
+          speakText(items[newIndex]);
+          return newIndex;
+        } else {
+          speakText("Beginning of text");
+          return prev;
+        }
+      });
+    } else if (command = 'repeat') {
+      speakText(items[currentIndex]);
+    }
+
+  }, [items, command])
+
   return (
-    <div style={{ textAlign: "center", marginTop: "12px", position: "absolute" }} className="text-black">
+    <div style={{ textAlign: "left", marginTop: "10px", position: "absolute" }} className="text-[#4d88a9] font-bold">
       <SentenceWordToggle onToggle={setUseSentences} />
-      <p>
+      <p className="pl-3">
         Current:{" "}
         <strong>{items[currentIndex] === "" ? "—" : items[currentIndex]}</strong>
       </p>
