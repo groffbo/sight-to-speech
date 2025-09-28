@@ -8,9 +8,10 @@ const SpeechGestureToggle = ({ children, onClick, className = '' }) => {
         flex items-center justify-center 
         w-24 h-24 
         rounded-full 
-        bg-blue-500 text-white 
-        hover:bg-blue-600 
-        focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50
+        bg-[#88c4ff] text-white
+        border-4 border-white 
+        hover:bg-[#6fb7ff]
+        focus:outline-none focus:ring-0 focus:ring-blue-0 focus:ring-opacity-0
         ${className}
       `}
     >
