@@ -2,14 +2,12 @@
 
 import GestureCamera from "./gestureCam";
 import { TTSProvider } from "./components/TTSprovider";
-import ReadFromBackend from "./components/ReadFromBackend";
 
 export default function Page() {
   return (
     <TTSProvider>
       <main style={{ padding: "20px" }}>
         <h1>Simple Backend TTS Demo</h1>
-        <ReadFromBackend />
         <GestureCamera />
       </main>
     </TTSProvider>
