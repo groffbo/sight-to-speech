@@ -1,15 +1,39 @@
 "use client";
-import React, { useRef, useEffect, useState } from 'react';
-import { GestureRecognizer, FilesetResolver } from '@mediapipe/tasks-vision';
+import React, { useRef, useEffect, useState } from "react";
+import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
+import Reader from "./components/Reader";
 
 // Distance between two landmarks
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 
 // Check if finger is extended (tip farther from palm than base joint)
 const isFingerExtended = (landmarks, tipIndex, baseIndex = 0) => {
-  return distance(landmarks[tipIndex], landmarks[0]) >
-         distance(landmarks[baseIndex], landmarks[0]);
+  return distance(landmarks[tipIndex], landmarks[0]) > distance(landmarks[baseIndex], landmarks[0]);
 };
+
+const FLASK_API_URL = "http://localhost:5000/data";
+
+function sendCommand(commandKey) {
+  fetch(FLASK_API_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      key: commandKey,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      console.log("Command sent successfully. Server response:", data);
+    })
+    .catch((error) => {
+      console.error("Error connecting to Flask API:", error);
+    });
+}
+
+// Example: Call this function when the user presses a button
+// sendCommand('c');
 
 const isOGesture = (landmarks) => {
     const thumbTip = landmarks[4];
@@ -24,84 +48,99 @@ const isOGesture = (landmarks) => {
   };
 
 const isPointingLeft = (landmarks) => {
-    const indexTip = landmarks[8];
-    const indexBase = landmarks[5];
-    
-    // 1. Index finger extended
-    const indexExtended = isFingerExtended(landmarks, 8, 5);
-  
-    // 2. Other fingers curled
-    const middleFolded = !isFingerExtended(landmarks, 12, 9);
-    const ringFolded   = !isFingerExtended(landmarks, 16, 13);
-    const pinkyFolded  = !isFingerExtended(landmarks, 20, 17);
-  
-    // 3. Index points left (tip.x significantly < base.x)
-    const pointingLeft = (indexTip.x + 0.05) < indexBase.x;
-  
-    return indexExtended && middleFolded && ringFolded && pinkyFolded && pointingLeft;
-  };  
+  const indexTip = landmarks[8];
+  const indexBase = landmarks[5];
 
-  const sendKeyPress = (key) => {
-    const event = new KeyboardEvent("keydown", {
-      key,
-      code: key,
-      keyCode: key.charCodeAt(0),
-      bubbles: true,
-    });
-    document.dispatchEvent(event);
-  };
-  
-  const sendKeyRelease = (key) => {
-    const event = new KeyboardEvent("keyup", {
-      key,
-      code: key,
-      keyCode: key.charCodeAt(0),
-      bubbles: true,
-    });
-    document.dispatchEvent(event);
-  };
+  // 1. Index finger extended
+  const indexExtended = isFingerExtended(landmarks, 8, 5);
+
+  // 2. Other fingers curled
+  const middleFolded = !isFingerExtended(landmarks, 12, 9);
+  const ringFolded = !isFingerExtended(landmarks, 16, 13);
+  const pinkyFolded = !isFingerExtended(landmarks, 20, 17);
+
+  // 3. Index points left (tip.x significantly < base.x)
+  const pointingLeft = indexTip.x + 0.05 < indexBase.x;
+
+  return indexExtended && middleFolded && ringFolded && pinkyFolded && pointingLeft;
+};
+
+const sendKeyPress = (key) => {
+  const event = new KeyboardEvent("keydown", {
+    key,
+    code: key,
+    keyCode: key.charCodeAt(0),
+    bubbles: true,
+  });
+  document.dispatchEvent(event);
+};
+
+const sendKeyRelease = (key) => {
+  const event = new KeyboardEvent("keyup", {
+    key,
+    code: key,
+    keyCode: key.charCodeAt(0),
+    bubbles: true,
+  });
+  document.dispatchEvent(event);
+};
 
 // --- DRAWING UTILITIES START ---
 // Define the connections for the hand landmarks (from MediaPipe documentation)
 const HAND_CONNECTIONS = [
-  [0, 1], [1, 2], [2, 3], [3, 4], // Thumb
-  [0, 5], [5, 6], [6, 7], [7, 8], // Index
-  [0, 9], [9, 10], [10, 11], [11, 12], // Middle
-  [0, 13], [13, 14], [14, 15], [15, 16], // Ring
-  [0, 17], [17, 18], [18, 19], [19, 20], // Pinky
+  [0, 1],
+  [1, 2],
+  [2, 3],
+  [3, 4], // Thumb
+  [0, 5],
+  [5, 6],
+  [6, 7],
+  [7, 8], // Index
+  [0, 9],
+  [9, 10],
+  [10, 11],
+  [11, 12], // Middle
+  [0, 13],
+  [13, 14],
+  [14, 15],
+  [15, 16], // Ring
+  [0, 17],
+  [17, 18],
+  [18, 19],
+  [19, 20], // Pinky
 ];
 
 // Helper to draw lines between connected landmarks
 const drawConnectors = (ctx, landmarks, connections) => {
-    ctx.strokeStyle = '#b1e2fc';
-    ctx.lineWidth = 4;
-    for (const connection of connections) {
-        const start = landmarks[connection[0]];
-        const end = landmarks[connection[1]];
-        
-        ctx.beginPath();
-        // Landmarks are normalized (0.0 to 1.0), so we multiply by canvas dimensions
-        ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
-        ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
-        ctx.stroke();
-    }
+  ctx.strokeStyle = "#b1e2fc";
+  ctx.lineWidth = 4;
+  for (const connection of connections) {
+    const start = landmarks[connection[0]];
+    const end = landmarks[connection[1]];
+
+    ctx.beginPath();
+    // Landmarks are normalized (0.0 to 1.0), so we multiply by canvas dimensions
+    ctx.moveTo(start.x * ctx.canvas.width, start.y * ctx.canvas.height);
+    ctx.lineTo(end.x * ctx.canvas.width, end.y * ctx.canvas.height);
+    ctx.stroke();
+  }
 };
 
 // Helper to draw circles for each landmark point
 const drawLandmarks = (ctx, landmarks) => {
-    ctx.fillStyle = '#FFFFFF';
-    for (const landmark of landmarks) {
-        ctx.beginPath();
-        // Landmarks are normalized (0.0 to 1.0)
-        ctx.arc(
-            landmark.x * ctx.canvas.width, 
-            landmark.y * ctx.canvas.height, 
-            5, // Radius of the landmark point
-            0, 
-            2 * Math.PI
-        );
-        ctx.fill();
-    }
+  ctx.fillStyle = "#FFFFFF";
+  for (const landmark of landmarks) {
+    ctx.beginPath();
+    // Landmarks are normalized (0.0 to 1.0)
+    ctx.arc(
+      landmark.x * ctx.canvas.width,
+      landmark.y * ctx.canvas.height,
+      5, // Radius of the landmark point
+      0,
+      2 * Math.PI
+    );
+    ctx.fill();
+  }
 };
 // --- DRAWING UTILITIES END ---
 
@@ -111,25 +150,23 @@ const GestureCamera = () => {
   const [gestureRecognizer, setGestureRecognizer] = useState(null);
   const [lastVideoTime, setLastVideoTime] = useState(-1);
 
-// gesture buffer state
-const [stableGesture, setStableGesture] = useState("No Gesture"); 
-const gestureBuffer = useRef([]);
-const BUFFER_SIZE = 50;
+  // gesture buffer state
+  const [stableGesture, setStableGesture] = useState("No Gesture");
+  const gestureBuffer = useRef([]);
+  const BUFFER_SIZE = 100;
 
   // Initialize GestureRecognizer Model
   useEffect(() => {
     const initializeModel = async () => {
-      const vision = await FilesetResolver.forVisionTasks(
-        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm"
-      );
-      
+      const vision = await FilesetResolver.forVisionTasks("https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm");
+
       const recognizer = await GestureRecognizer.createFromOptions(vision, {
         baseOptions: {
           modelAssetPath: `https://storage.googleapis.com/mediapipe-models/gesture_recognizer/gesture_recognizer/float16/1/gesture_recognizer.task`,
-          delegate: "GPU" 
+          delegate: "GPU",
         },
-        runningMode: 'VIDEO',
-        numHands: 1
+        runningMode: "VIDEO",
+        numHands: 1,
       });
       setGestureRecognizer(recognizer);
     };
@@ -160,25 +197,23 @@ const BUFFER_SIZE = 50;
     const predictAndDrawLoop = () => {
       const video = videoRef.current;
       const canvas = canvasRef.current;
-      const ctx = canvas.getContext('2d');
-      
+      const ctx = canvas.getContext("2d");
+
       // Set canvas dimensions to match video
       const { videoWidth, videoHeight } = video;
       canvas.width = videoWidth;
       canvas.height = videoHeight;
-      
-      
+
       // Only perform recognition if the video is ready and not at the same time stamp
       if (video.currentTime !== lastVideoTime) {
         setLastVideoTime(video.currentTime);
 
-        
         // Run Recognition
         // const results = gestureRecognizer.recognizeForVideo(video, performance.now());
-        const offscreenCanvas = document.createElement('canvas');
+        const offscreenCanvas = document.createElement("canvas");
         offscreenCanvas.width = video.videoWidth;
         offscreenCanvas.height = video.videoHeight;
-        const offscreenCtx = offscreenCanvas.getContext('2d');
+        const offscreenCtx = offscreenCanvas.getContext("2d");
 
         // Mirror the video frame
         offscreenCtx.save();
@@ -190,29 +225,21 @@ const BUFFER_SIZE = 50;
         const results = gestureRecognizer.recognizeForVideo(offscreenCanvas, performance.now());
 
         ctx.transform(-1, 0, 0, 1, canvas.width, 0);
-        
+
         // Draw Results on Canvas
         ctx.clearRect(0, 0, videoWidth, videoHeight);
-        
+
         if (results.landmarks.length > 0) {
           results.landmarks.forEach((landmarks, index) => {
-            
-            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, '#000000');
+            drawConnectors(ctx, landmarks, HAND_CONNECTIONS, "#000000");
             drawLandmarks(ctx, landmarks);
-            
+
             // Display the recognized gesture label
             let detectedGesture = results.gestures[index][0]?.categoryName || "No Gesture";
             // const gesture = results.gestures[index][0]?.categoryName || 'No Gesture';
-            const handedness = results.handednesses[index][0]?.categoryName || 'Unknown';
+            const handedness = results.handednesses[index][0]?.categoryName || "Unknown";
 
-            // const touching = isThumbIndexTouching(landmarks);
-            // const dShape   = isASLDShape(landmarks);
-
-            // if (touching && dShape) {
-            //   console.log("Thumb + Index touching in D shape");
-            // }
-            // else if (isOGesture(landmarks)) detectedGesture = "O";
-            if (isOGesture(landmarks)) detectedGesture = "O";
+            if (isOGesture(landmarks)) detectedGesture = "O_Shape";
             else if (isPointingLeft(landmarks)) detectedGesture = "Pointing_Left";
 
             // update gesture buffer
@@ -220,32 +247,32 @@ const BUFFER_SIZE = 50;
             if (gestureBuffer.current.length > BUFFER_SIZE) {
               gestureBuffer.current.shift();
             }
-            const allSame = gestureBuffer.current.every(g => g === detectedGesture);
+            const allSame = gestureBuffer.current.every((g) => g === detectedGesture);
             if (allSame && detectedGesture !== stableGesture) {
               setStableGesture(detectedGesture);
             }
 
-            ctx.font = '24px Roboto';
-            ctx.fillStyle = 'black';
+            ctx.font = "24px Roboto";
+            ctx.fillStyle = "black";
             ctx.fillText(
-                `${handedness}: ${detectedGesture}`,
-                50,
-                50 + index * 40 // Offset based on hand index
+              `${handedness}: ${detectedGesture}`,
+              50,
+              50 + index * 40 // Offset based on hand index
             );
           });
         }
       }
-      
+
       // Continue the loop
       requestAnimationFrame(predictAndDrawLoop);
     };
 
     startCamera();
-    
+
     // 5. Cleanup function
     return () => {
       if (videoRef.current && videoRef.current.srcObject) {
-        videoRef.current.srcObject.getTracks().forEach(track => track.stop());
+        videoRef.current.srcObject.getTracks().forEach((track) => track.stop());
       }
     };
   }, [gestureRecognizer]);
@@ -257,23 +284,23 @@ const BUFFER_SIZE = 50;
   
     let key;
     switch (stableGesture) {
-      case "Open_Palm":
-        key = "C";
+      case "Open_Palm": // start
+        key = "c";
         break;
-      case "Closed_Fist":
-        key = "S";
+      case "Closed_Fist": // stop
+        key = "v";
         break;
-      case "Victory":
-        key = "V";
+      case "Victory": // capture current words
+        key = "s";
         break;
-      case "Pointing_Up":
-        key = "N";
+      case "Pointing_Up": // forward
+        key = "n";
         break;
-      case "Pointing_Left":
-        key = "B";
+      case "Pointing_Left": // backward
+        key = "p";
         break;
-      case "O":
-        key = "R";
+      case "O_Shape":
+        key = "o";
         break;
       default:
         key = null;
@@ -284,28 +311,27 @@ const BUFFER_SIZE = 50;
     // repeating gestures (15s pulse)
     if (["Pointing_Up"].includes(stableGesture)) {
       // call once immediately
-      sendKeyPress(key);
-      sendKeyRelease(key);
+      sendCommand(key);
       console.log("Hitting the letter", key);
   
       // then repeat every 15s
       const interval = setInterval(() => {
-        sendKeyPress(key);
-        sendKeyRelease(key);
+        sendCommand(key);
         console.log("Hitting the letter", key);
       }, 1500); // 15s interval
   
       return () => clearInterval(interval);
     }
-  
     // one-shot gestures
-    if (["Open_Palm", "Closed_Fist", "Victory"].includes(stableGesture)) {
-      sendKeyPress(key);
-      sendKeyRelease(key);
+    else if (["Open_Palm", "Closed_Fist", "Victory"].includes(stableGesture)) {
+      sendCommand(key);
       console.log("Hitting the letter", key);
   
       setBlink(true);
       setTimeout(() => setBlink(false), 300);
+    }
+    else {
+      sendCommand(key);
     }
   }, [stableGesture]);
   

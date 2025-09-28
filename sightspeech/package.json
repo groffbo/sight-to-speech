@@ -14,12 +14,14 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-speech-to-text": "^0.8.0",
-    "react-text-to-speech": "^2.1.2"
+    "react-text-to-speech": "^2.1.2",
+    "symspell": "^0.6.1",
+    "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "24.5.2",
+    "@types/node": "^24.5.2",
     "@types/react": "19.1.14",
     "eslint": "^9",
     "eslint-config-next": "15.5.4",
