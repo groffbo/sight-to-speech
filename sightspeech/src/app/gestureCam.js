@@ -1,6 +1,7 @@
 "use client";
 import React, { useRef, useEffect, useState } from "react";
 import { GestureRecognizer, FilesetResolver } from "@mediapipe/tasks-vision";
+import Reader from "./components/Reader";
 
 // Distance between two landmarks
 const distance = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
@@ -110,7 +111,7 @@ const HAND_CONNECTIONS = [
 
 // Helper to draw lines between connected landmarks
 const drawConnectors = (ctx, landmarks, connections) => {
-  ctx.strokeStyle = "#000000";
+  ctx.strokeStyle = "#b1e2fc";
   ctx.lineWidth = 4;
   for (const connection of connections) {
     const start = landmarks[connection[0]];
@@ -151,7 +152,7 @@ const GestureCamera = () => {
   // gesture buffer state
   const [stableGesture, setStableGesture] = useState("No Gesture");
   const gestureBuffer = useRef([]);
-  const BUFFER_SIZE = 20;
+  const BUFFER_SIZE = 100;
 
   // Initialize GestureRecognizer Model
   useEffect(() => {
@@ -237,7 +238,7 @@ const GestureCamera = () => {
             // const gesture = results.gestures[index][0]?.categoryName || 'No Gesture';
             const handedness = results.handednesses[index][0]?.categoryName || "Unknown";
 
-            if (isOGesture(landmarks)) detectedGesture = "O";
+            if (isOGesture(landmarks)) detectedGesture = "O_Shape";
             else if (isPointingLeft(landmarks)) detectedGesture = "Pointing_Left";
 
             // update gesture buffer
@@ -280,24 +281,33 @@ const GestureCamera = () => {
       console.log("Stable gesture changed to:", stableGesture);
 
       switch (stableGesture) {
-        case "Open_Palm":
+        case "Open_Palm": //start
           sendCommand("c");
           console.log("Hitting the letter C");
           break;
 
-        case "Closed_Fist": // NOT ASSIGNED YET
+        case "Closed_Fist": // stop
           sendCommand("v");
           console.log("Hitting the letter V");
           break;
 
-        case "Pointing_Up":
+        case "Pointing_Up": //forward
           sendCommand("n");
           console.log("Hitting the letter N");
           break;
 
-        case "Pointing_Left":
+        case "Pointing_Left": //backward
           sendCommand("p");
           console.log("Hitting the letter P");
+          break;
+
+        case "O_Shape": // repeat word/s
+          sendCommand("o");
+          console.log("Hitting the letter o");
+          break;
+        case "Victory": // capture current word/s
+          sendCommand("s");
+          console.log("Hitting the letter s");
           break;
         default:
           console.log("No key mapping for this gesture.");
@@ -323,6 +333,7 @@ const GestureCamera = () => {
       {!gestureRecognizer && (
         <p style={{ position: "absolute", top: "50%", left: 0, width: "100%", textAlign: "center", color: "white", background: "rgba(0,0,0,0.5)" }}>Loading Hand Gesture Model...</p>
       )}
+      <Reader gesture={stableGesture}/>
     </div>
   );
 };

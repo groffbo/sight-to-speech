@@ -35,7 +35,7 @@ SKIP_FRAMES = 30
 TARGET_WIDTH = 700 
 
 # OpenCV configuration
-CAMERA_INDEX = 0
+CAMERA_INDEX = 1
 WINDOW_NAME = "Scanner change title later"
 
 # --- SymSpell Dictionary Content (FALLBACK ONLY) ---
@@ -61,6 +61,15 @@ app = Flask(__name__)
 CORS(app) 
 data = "g" 
 
+# --- Global storage ---
+latest_words = []  # will hold the last Gemini array
+
+@app.route('/data', methods=['GET'])
+def get_data():
+    global latest_words
+    print("GET /data called, returning:", latest_words)  # debug
+    return jsonify({"words": latest_words})
+
 @app.route('/data', methods=['POST'])
 def receive_data():
     global data
@@ -85,6 +94,7 @@ def array_buffer_to_base64(buffer) -> str:
     return base64.b64encode(buffer).decode('utf-8')
 
 def capture_and_send_to_gemini(frame, user_prompt: str, is_structured_output: bool = True) -> Optional[List[str]]:
+    global latest_words
     print("\n--- Sending Image to Gemini API...---")
     start_time = time.time()
     encode_param = [int(cv2.IMWRITE_JPEG_QUALITY), 90]
@@ -147,6 +157,9 @@ def capture_and_send_to_gemini(frame, user_prompt: str, is_structured_output: bo
                 print(f"Gemini Success (Structured)! Recognized {len(word_array)} words:")
                 print("----------------- GEMINI OCR RESULT (C) -----------------")
                 print(word_array)
+                latest_words.clear()
+                latest_words.extend(word_array)
+
                 print("---------------------------------------------------------")
                 return word_array
             else:
