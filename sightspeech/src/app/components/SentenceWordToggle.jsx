@@ -11,12 +11,12 @@ const SentenceWordToggle = ({ onToggle, className }) => {
   };
 
   return (
-    <label className={`flex flex-col justify-center cursor-pointer ${className}`}>
-      <span className=" text-gray-700 text-2xl items-center">Use Sentences</span>
+    <label className={`flex flex-wrap justify-center cursor-pointer p-3 ${className}`}>
+      <span className=" text-gray-700 text-2xl items-center pr-5">Use Sentences</span>
       <div className="relative">
         <input
           type="checkbox"
-          className="sr-only" // Hide the default checkbox visually
+          className="sr-only " // Hide the default checkbox visually
           checked={useSentences}
           onChange={handleToggle}
         />

@@ -309,21 +309,20 @@ const GestureCamera = ({ speechCommand }) => {
     if (!key) return;
   
     // repeating gestures (15s pulse)
-    if (["Pointing_Up"].includes(stableGesture)) {
+    if ([].includes(stableGesture)) {
       // call once immediately
       sendCommand(key);
       console.log("Hitting the letter", key);
   
       // then repeat every 15s
-      const interval = setInterval(() => {
         sendCommand(key);
-        console.log("Hitting the letter", key);
-      }, 1500); // 15s interval
+        console.log("Hitting the letter", key);  
+        setStableGesture("No Gesture")     
   
-      return () => clearInterval(interval);
+      //return () => clearInterval(interval);
     }
     // one-shot gestures
-    else if (["Open_Palm", "Closed_Fist", "Victory"].includes(stableGesture)) {
+    else if (["Open_Palm", "Closed_Fist", "Victory", "Pointing_Up"].includes(stableGesture)) {
       sendCommand(key);
       console.log("Hitting the letter", key);
   

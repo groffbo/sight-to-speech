@@ -1,53 +1,63 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import { useTTS } from "./TTSprovider";
+import SentenceWordToggle from "./SentenceWordToggle";
 
-const Reader = ({ gesture, command }) => {
-  const [words, setWords] = useState([]);
+const Reader = ({ gesture }) => {
+  const [useSentences, setUseSentences] = useState(false); // "words" | "sentences"
+  const [items, setItems] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { speakText } = useTTS();
 
-  // -----------------------------
-  // 1. Fetch words when open palm gesture is detected
-  // -----------------------------
   useEffect(() => {
     if (!gesture) return;
 
-    const fetchWords = async () => {
-      try {
-        const res = await fetch("http://localhost:5000/data");
-        const data = await res.json();
+    const fetchItems = async () => {
+  try {
+    const endpoint =
+      !useSentences
+        ? "http://localhost:5000/data/words"
+        : "http://localhost:5000/data/sentences";
 
-        if (
-          Array.isArray(data.words) &&
-          JSON.stringify(data.words) !== JSON.stringify(words.slice(1))
-        ) {
-          const withBlank = ["", ...data.words]; // prepend blank
-          setWords(withBlank);
-          setCurrentIndex(0); // start at blank
-          speakText(""); // say nothing for blank
+    const res = await fetch(endpoint);
+    const data = await res.json();
+
+    if (Array.isArray(data.words)) {
+      const withBlank = ["", ...data.words, ""];
+
+      // try to preserve position
+      const oldItem = items[currentIndex];
+      let newIndex = 0;
+      if (oldItem) {
+        const foundIdx = withBlank.indexOf(oldItem);
+        if (foundIdx !== -1) {
+          newIndex = foundIdx;
         }
-      } catch (err) {
-        console.error("Failed to fetch words:", err);
       }
-    };
+
+      setItems(withBlank);
+      setCurrentIndex(newIndex);
+      speakText(withBlank[newIndex] || "");
+    }
+  } catch (err) {
+    console.error("Failed to fetch items:", err);
+  }
+};
 
     if (gesture === "Open_Palm") {
-      fetchWords();
+      fetchItems();
     }
-  }, [gesture]);
+  }, [gesture, useSentences, speakText]);
 
-  // -----------------------------
-  // 2. Respond to navigation gestures
-  // -----------------------------
+  // Navigation gestures (same as before)...
   useEffect(() => {
-    if (!gesture || words.length === 0) return;
+    if (!gesture || items.length === 0) return;
 
     if (gesture === "Pointing_Up") {
       setCurrentIndex((prev) => {
-        if (prev < words.length - 1) {
+        if (prev < items.length - 1) {
           const newIndex = prev + 1;
-          speakText(words[newIndex]);
+          speakText(items[newIndex]);
           return newIndex;
         } else {
           speakText("End of text");
@@ -58,7 +68,7 @@ const Reader = ({ gesture, command }) => {
       setCurrentIndex((prev) => {
         if (prev > 0) {
           const newIndex = prev - 1;
-          speakText(words[newIndex]);
+          speakText(items[newIndex]);
           return newIndex;
         } else {
           speakText("Beginning of text");
@@ -66,47 +76,16 @@ const Reader = ({ gesture, command }) => {
         }
       });
     } else if (gesture === "O-Shape") {
-      speakText(words[currentIndex]);
+      speakText(items[currentIndex]);
     }
-  }, [gesture, words]);
-
-  useEffect(() => {
-     if (!command || words.length === 0) return;
-
-    if (command === 'play') {
-      console.log("Play words")
-      setCurrentIndex((prev) => {
-        if (prev < words.length - 1) {
-          const newIndex = prev + 1;
-          speakText(words[newIndex]);
-          return newIndex;
-        } else {
-          speakText("End of text");
-          return prev;
-        }
-      });
-    } else if (command === 'back') {
-      setCurrentIndex((prev) => {
-        if (prev > 0) {
-          const newIndex = prev - 1;
-          speakText(words[newIndex]);
-          return newIndex;
-        } else {
-          speakText("Beginning of text");
-          return prev;
-        }
-      });
-    } else if (command = 'repeat') {
-      speakText(words[currentIndex]);
-    }
-
-  }, [words, command])
+  }, [gesture, items, speakText]);
 
   return (
-    <div style={{ textAlign: "center", marginTop: "12px" }} className="text-black text-2xl">
+    <div style={{ textAlign: "center", marginTop: "12px", position: "absolute" }} className="text-black">
+      <SentenceWordToggle onToggle={setUseSentences} />
       <p>
-        Current word:{" "}
-        <strong>{words[currentIndex] === "" ? "—" : words[currentIndex]}</strong>
+        Current:{" "}
+        <strong>{items[currentIndex] === "" ? "—" : items[currentIndex]}</strong>
       </p>
     </div>
   );
