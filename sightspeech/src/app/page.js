@@ -40,25 +40,20 @@ export default function Page() {
   };
 
   return (
-      <div className="min-h-screen flex flex-col animated-bg">
-        <h1 className="text-black font-extrabold xl:text-3xl lg:text-2xl md: text-xl">SightSense</h1>
-        
-        {/* Render speech controller (dynamically loaded) */}
+<div className="min-h-screen animated-bg align-middle ">
+        <h1 className="text-[#6fb7ff] font-extrabold xl:text-20xl lg:text-10xl md: text-7xl moirai-one-regular pt-15 pb-5 text-center">SightSpeech</h1>
         <SpeechController ref={speechRef} onResult={handleResult} onStateChange={handleStateChange} />
-
-        
-        <div className="flex flex-shrink-0 text-black">
-          <p>Last word: {latestFinal || "—"}</p>
-        </div>
-      <main className="flex-1 flex flex-wrap items-center justify-center">
+        <main className="items-center justify-center z-1">
+          <div className="mx-auto w-[80%] h-[80%] max-w-5xl border-8 m-5 items-center">
+            <GestureCamera className="w-full h-full"/>
+          </div>
         <div className="w-[80%] h-[80%] max-w-5xl border-6 border-black-700 m-5">
           <GestureCamera/>
         </div>
-        <SpeechGestureToggle onClick={() => setUseGestures(!useGestures)} className="flex flex-shrink-0">
-          <div className="text-3xl">{(useGestures) ? "🗣️" : "👋" }</div>
-        </SpeechGestureToggle>
-      </main>
+          <SpeechGestureToggle className="absolute bottom-6 right-6 z-30 w-24 h-24" onClick={() => setUseGestures(!useGestures)} >
+            <div className="mx-auto">{(useGestures) ? <img src="/speech.png" className="h-14 w-14"/> : <img src="/gesture.png" className="h-18 w-18"/>}</div>
+          </SpeechGestureToggle>
+        </main>
       </div>
-    
   )
 }
