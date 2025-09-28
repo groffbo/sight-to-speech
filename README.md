@@ -69,5 +69,3 @@ Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visual
 | `Closed_Fist`   | Description       |
 | `Pointing_Up`   | Tab               |
 | `Pointing_Left` | Backwards Tab     |
-
-You can adjust these mappings in the React `useEffect` that handles `stableGesture`.
