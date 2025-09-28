@@ -7,7 +7,7 @@ Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visual
 
 ## 🧭 Table of Contents
 
-- [Features](## ✨ Features)  
+- [Features](#features)  
 - [Architecture & Components](#architecture--components)  
 - [Setup & Run](#setup--run)  
 - [Gesture Mapping](#gesture-mapping)  
@@ -19,7 +19,7 @@ Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visual
 
 ---
 
-## ✨ Features
+## features
 
 - Real-time camera capture and processing  
 - Hand gesture recognition (e.g. “point left”, “O”, open palm)  
