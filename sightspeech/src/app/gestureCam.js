@@ -356,6 +356,8 @@ const GestureCamera = () => {
       className="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1] rounded-xl"
     />
   
+      <Reader gesture={stableGesture}/>
+
     {!gestureRecognizer && (
       <p className="absolute left-0 top-1/2 w-full -translate-y-1/2 text-center text-white bg-black/50 py-2">
         Loading Hand Gesture Model...

@@ -3,6 +3,7 @@
 import GestureCamera from "./gestureCam";
 import SpeechGestureToggle from "./components/SpeechGestureToggle";
 import { useEffect, useState } from "react";
+import SentenceWordToggle from "./components/SentenceWordToggle";
 
 export default function Page() {
   const [useGestures, setUseGestures] = useState(true)
@@ -24,6 +25,7 @@ export default function Page() {
           <SpeechGestureToggle className="absolute bottom-6 right-6 z-30 w-34 h-34" onClick={() => setUseGestures(!useGestures)} >
             <div className="mx-auto">{(useGestures) ? <img src="/gesture.png" className="h-26 w-26"/> : <img src="/speech.png" className="h-22 w-22"/>}</div>
           </SpeechGestureToggle>
+          <SentenceWordToggle className={"absolute top-6 right-6"} onToggle={setUseGestures}/>
         </main>
       </div>
   )
