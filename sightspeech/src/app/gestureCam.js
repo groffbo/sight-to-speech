@@ -290,22 +290,26 @@ const BUFFER_SIZE = 20;
   }, [stableGesture]);
 
   return (
-    <div style={{ position: 'relative', width: '640px', height: '480px', margin: 'auto' }}>
-      {/* Video element will be the base layer */}
+     <div className="relative w-full h-full mx-auto">
+      {/* Video base layer */}
       <video
         ref={videoRef}
         autoPlay
         playsInline
-        style={{ width: '100%', height: '100%', transform: 'scaleX(-1)' }} // Flipped for mirror effect
+        className="w-full h-full transform scale-x-[-1]" // mirror with Tailwind arbitrary value
       />
-      {/* Canvas element will overlay the video for drawing */}
+
+      {/* Canvas overlay */}
       <canvas
         ref={canvasRef}
-        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'scaleX(-1)' }} // Flipped to match video
+        className="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1]" // keep in sync with video
       />
-      
-      {!gestureRecognizer && <p style={{ position: 'absolute', top: '50%', left: 0, width: '100%', textAlign: 'center', color: 'white', background: 'rgba(0,0,0,0.5)' }}>Loading Hand Gesture Model...</p>}
-      
+
+      {!gestureRecognizer && (
+        <p className="absolute left-0 top-1/2 w-full -translate-y-1/2 text-center text-white bg-black/50 py-2">
+          Loading Hand Gesture Model...
+        </p>
+      )}
     </div>
   );
 };
