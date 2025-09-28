@@ -7,27 +7,35 @@ const Reader = ({ gesture }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const { speakText } = useTTS();
 
-  // 1. Grab words from Flask /data endpoint
-    useEffect(() => {
-    fetch("http://localhost:5000/data")
-        .then((res) => res.json())
-        .then((data) => {
-        console.log("Fetched data from backend:", data); // 👀 Debug
+  // -----------------------------
+  // 1. Fetch words when open palm gesture is detected
+  // -----------------------------
+  useEffect(() => {
+    if (!gesture) return;
 
-        const wordsArray = Array.isArray(data.words) ? data.words : data;
-        console.log("Processed words array:", wordsArray); // 👀 Debug
+    const fetchWords = async () => {
+      try {
+        const res = await fetch("http://localhost:5000/data");
+        const data = await res.json();
 
-        if (Array.isArray(wordsArray)) {
-            setWords(wordsArray);
-            setCurrentIndex(0);
-            if (wordsArray.length > 0) speakText(wordsArray[0]);
+        if (Array.isArray(data.words) && JSON.stringify(data.words) !== JSON.stringify(words)) {
+          setWords(data.words);
+          setCurrentIndex(0);        // reset to first word
+          if (data.words.length > 0) speakText(data.words[0]);
         }
-        })
-        .catch((err) => console.error("Error fetching words:", err));
-    }, []);
+      } catch (err) {
+        console.error("Failed to fetch words:", err);
+      }
+    };
 
+    if (gesture === "Open_Palm") {
+      fetchWords();
+    }
+  }, [gesture]); // triggers only when gesture changes
 
-  // 4. Respond to gesture changes
+  // -----------------------------
+  // 2. Respond to navigation gestures
+  // -----------------------------
   useEffect(() => {
     if (!gesture || words.length === 0) return;
 
@@ -42,9 +50,7 @@ const Reader = ({ gesture }) => {
           return prev;
         }
       });
-    }
-
-    if (gesture === "backward") {
+    } else if (gesture === "backward") {
       setCurrentIndex((prev) => {
         if (prev > 0) {
           const newIndex = prev - 1;
@@ -55,12 +61,10 @@ const Reader = ({ gesture }) => {
           return prev;
         }
       });
-    }
-
-    if (gesture === "repeat") {
+    } else if (gesture === "repeat") {
       speakText(words[currentIndex]);
     }
-  }, [gesture]);
+  }, [gesture, words]);
 
   return (
     <div style={{ textAlign: "center", marginTop: "12px" }}>
