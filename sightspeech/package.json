@@ -14,7 +14,8 @@
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-speech-to-text": "^0.8.0",
-    "react-text-to-speech": "^2.1.2"
+    "react-text-to-speech": "^2.1.2",
+    "use-sound": "^5.0.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
