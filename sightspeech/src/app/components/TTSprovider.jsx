@@ -1,30 +1,42 @@
 "use client";
 
-import { createContext, useContext, useState } from "react";
-import { useSpeech, useVoices } from "react-text-to-speech";
+import { createContext, useContext, useEffect, useState } from "react";
 
 const TTSContext = createContext();
 
 export function TTSProvider({ children }) {
-  const { languages, voices } = useVoices();
-  const [lang, setLang] = useState("en-US");
-  const [voiceURI, setVoiceURI] = useState("Google US English");
-  const [text, setText] = useState("");
+  const [voices, setVoices] = useState([]);
+  const [selectedVoice, setSelectedVoice] = useState(null);
 
-  const { start } = useSpeech({ text, lang, voiceURI });
+  // Load available voices
+  useEffect(() => {
+    const loadVoices = () => {
+      const availableVoices = speechSynthesis.getVoices();
+      setVoices(availableVoices);
 
-  // Function to update text AND speak immediately
+      // Pick a nice-sounding default (Google voices are usually better)
+      const googleVoice = availableVoices.find(v =>
+        v.name.includes("Google US English")
+      );
+      setSelectedVoice(googleVoice || availableVoices[0] || null);
+    };
+
+    loadVoices();
+    speechSynthesis.onvoiceschanged = loadVoices;
+  }, []);
+
   const speakText = (newText) => {
-    setText(newText);
-    start();
+    if (!newText) return;
+    const utterance = new SpeechSynthesisUtterance(newText);
+    utterance.lang = "en-US";
+    if (selectedVoice) utterance.voice = selectedVoice;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utterance);
   };
 
   return (
-    <TTSContext.Provider
-      value={{
-        speakText,
-      }}
-    >
+    <TTSContext.Provider value={{ speakText, voices, setSelectedVoice }}>
       {children}
     </TTSContext.Provider>
   );

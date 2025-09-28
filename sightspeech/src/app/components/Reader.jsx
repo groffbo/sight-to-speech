@@ -18,10 +18,14 @@ const Reader = ({ gesture }) => {
         const res = await fetch("http://localhost:5000/data");
         const data = await res.json();
 
-        if (Array.isArray(data.words) && JSON.stringify(data.words) !== JSON.stringify(words)) {
-          setWords(data.words);
-          setCurrentIndex(0);        // reset to first word
-          if (data.words.length > 0) speakText(data.words[0]);
+        if (
+          Array.isArray(data.words) &&
+          JSON.stringify(data.words) !== JSON.stringify(words.slice(1))
+        ) {
+          const withBlank = ["", ...data.words]; // prepend blank
+          setWords(withBlank);
+          setCurrentIndex(0); // start at blank
+          speakText(""); // say nothing for blank
         }
       } catch (err) {
         console.error("Failed to fetch words:", err);
@@ -31,7 +35,7 @@ const Reader = ({ gesture }) => {
     if (gesture === "Open_Palm") {
       fetchWords();
     }
-  }, [gesture]); // triggers only when gesture changes
+  }, [gesture]);
 
   // -----------------------------
   // 2. Respond to navigation gestures
@@ -39,7 +43,7 @@ const Reader = ({ gesture }) => {
   useEffect(() => {
     if (!gesture || words.length === 0) return;
 
-    if (gesture === "forward") {
+    if (gesture === "Pointing_Up") {
       setCurrentIndex((prev) => {
         if (prev < words.length - 1) {
           const newIndex = prev + 1;
@@ -50,7 +54,7 @@ const Reader = ({ gesture }) => {
           return prev;
         }
       });
-    } else if (gesture === "backward") {
+    } else if (gesture === "Pointing_Left") {
       setCurrentIndex((prev) => {
         if (prev > 0) {
           const newIndex = prev - 1;
@@ -61,14 +65,17 @@ const Reader = ({ gesture }) => {
           return prev;
         }
       });
-    } else if (gesture === "repeat") {
+    } else if (gesture === "O-Shape") {
       speakText(words[currentIndex]);
     }
   }, [gesture, words]);
 
   return (
     <div style={{ textAlign: "center", marginTop: "12px" }}>
-      <p>Current word: <strong>{words[currentIndex] || "—"}</strong></p>
+      <p>
+        Current word:{" "}
+        <strong>{words[currentIndex] === "" ? "—" : words[currentIndex]}</strong>
+      </p>
     </div>
   );
 };
