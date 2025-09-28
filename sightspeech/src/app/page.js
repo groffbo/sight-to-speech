@@ -5,6 +5,8 @@ import SpeechGestureToggle from "./components/SpeechGestureToggle";
 import { useEffect, useRef, useState } from "react";
 import SentenceWordToggle from "./components/SentenceWordToggle";
 import dynamic from "next/dynamic";
+import PingComponent from "./components/PingComponent";
+import { sendCommand } from "./lib/commands";
 const SpeechController = dynamic(() => import("./components/SpeechController"), {
   ssr: false
 });
@@ -13,6 +15,7 @@ export default function Page() {
   const [useGestures, setUseGestures] = useState(true)
   const [textRead, setTextRead] = useState("This is dummy data")
   const speechRef = useRef(null);
+  const [speechCooldown, setSpeechCooldown] = useState(false)
   const [latestFinal, setLatestFinal] = useState("");
   const [isRecording, setIsRecording] = useState(false);
 
@@ -30,7 +33,26 @@ export default function Page() {
   }, [useGestures]);
 
   const handleResult = ({ lastWord, lastTranscript }) => {
-    setLatestFinal(lastWord);
+
+    setLatestFinal(lastWord)
+
+    switch (lastWord) {
+      case "play":
+        sendCommand("n")
+        break
+      case "stop":
+        sendCommand("s")
+        break
+      case "capture":
+        sendCommand("c")
+        break
+      case "back":
+        sendCommand("p")
+        break
+      case "summarize":
+        sendCommand("v")
+        break
+    }
   };
 
   const handleStateChange = (recording) => {
@@ -40,22 +62,28 @@ export default function Page() {
   return (
       <div className="min-h-screen animated-bg align-middle ">
         <h1 className="text-[#6fb7ff] font-extrabold xl:text-20xl lg:text-10xl md: text-7xl moirai-one-regular pt-15 pb-10 text-center">SightSpeech</h1>
+        <p className="text-black text-2xl z-[10000]">{(!useGestures) ? latestFinal : ""}</p>
         <SpeechController ref={speechRef} onResult={handleResult} onStateChange={handleStateChange} />
         <main className="items-center justify-center z-1">
           <div className="flex m-20">
-          {(useGestures) ? 
             <div className="mx-auto w-[45%] h-[40%] border-10 rounded-3xl m-5 items-center">
-              <GestureCamera className="w-full h-full"/>
+              <GestureCamera className="w-full h-full" command={latestFinal} />
             </div>
-          : <div/>}
+          <div/>
             <div className="mx-auto w-[45%] h-[40%] border-10 rounded-3xl m-5 items-center">
-              <GestureCamera className="w-full h-full"/>
+                <img
+                  src="http://localhost:5000/video_feed"
+                  alt="MJPEG stream"
+                  style={{ width: '100%', height: 'auto' }}
+                />
             </div>
           </div>
           <SpeechGestureToggle className="absolute bottom-6 right-6 z-30 w-34 h-34" onClick={() => setUseGestures(!useGestures)} >
             <div className="mx-auto">{(useGestures) ? <img src="/gesture.png" className="h-26 w-26"/> : <img src="/speech.png" className="h-22 w-22"/>}</div>
           </SpeechGestureToggle>
+
           <SentenceWordToggle className={"absolute top-6 right-6"} onToggle={setUseGestures}/>
+          
         </main>
       </div>
   )

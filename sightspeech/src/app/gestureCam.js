@@ -144,7 +144,7 @@ const drawLandmarks = (ctx, landmarks) => {
 };
 // --- DRAWING UTILITIES END ---
 
-const GestureCamera = () => {
+const GestureCamera = ({ speechCommand }) => {
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
   const [gestureRecognizer, setGestureRecognizer] = useState(null);
@@ -356,7 +356,7 @@ const GestureCamera = () => {
       className="absolute inset-0 w-full h-full pointer-events-none transform scale-x-[-1] rounded-xl"
     />
   
-      <Reader gesture={stableGesture}/>
+      <Reader gesture={stableGesture} command={speechCommand}/>
 
     {!gestureRecognizer && (
       <p className="absolute left-0 top-1/2 w-full -translate-y-1/2 text-center text-white bg-black/50 py-2">

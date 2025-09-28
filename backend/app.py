@@ -8,7 +8,7 @@ import json
 import base64
 from symspellpy.symspellpy import SymSpell, Verbosity 
 from typing import List, Optional, Tuple
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, Response
 from flask_cors import CORS 
 import threading 
 
@@ -63,6 +63,29 @@ data = "g"
 
 # --- Global storage ---
 latest_words = []  # will hold the last Gemini array
+latest_frame = None
+frame_lock = threading.Lock()
+
+def gen_mjpeg():
+    global latest_frame
+    while True:
+        with frame_lock:
+            frame = None if latest_frame is None else latest_frame.copy()
+        if frame is None:
+            time.sleep(0.02)
+            continue
+        ok, jpeg = cv2.imencode('.jpg', frame)
+        if not ok:
+            continue
+        frame_bytes = jpeg.tobytes()
+        yield (b'--frame\r\n'
+               b'Content-Type: image/jpeg\r\n\r\n' + frame_bytes + b'\r\n')
+        time.sleep(0.03)  # throttle to ~30 fps (adjust as needed)
+
+@app.route('/video_feed')
+def video_feed():
+    return Response(gen_mjpeg(),
+                    mimetype='multipart/x-mixed-replace; boundary=frame')
 
 @app.route('/data', methods=['GET'])
 def get_data():
@@ -323,6 +346,8 @@ if __name__ == "__main__":
             print("Error: Failed to grab frame.")
             break
 
+        
+
         height, width, _ = frame.shape
         scale_factor = width / TARGET_WIDTH 
 
@@ -389,6 +414,9 @@ if __name__ == "__main__":
 
 
         cv2.imshow(WINDOW_NAME, frame)
+
+        with frame_lock:
+            latest_frame = frame.copy()
 
         frame_count += 1
         

@@ -2,50 +2,52 @@
 import React, { useEffect, useState } from "react";
 import { useTTS } from "./TTSprovider";
 
-const Reader = ({ gesture }) => {
-  const [mode, setMode] = useState("words"); // "words" | "sentences"
-  const [items, setItems] = useState([]);
+const Reader = ({ gesture, command }) => {
+  const [words, setWords] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const { speakText } = useTTS();
 
+  // -----------------------------
+  // 1. Fetch words when open palm gesture is detected
+  // -----------------------------
   useEffect(() => {
     if (!gesture) return;
 
-    const fetchItems = async () => {
+    const fetchWords = async () => {
       try {
-        const endpoint =
-          mode === "words"
-            ? "http://localhost:5000/data/words"
-            : "http://localhost:5000/data/sentences";
-
-        const res = await fetch(endpoint);
+        const res = await fetch("http://localhost:5000/data");
         const data = await res.json();
 
-        if (Array.isArray(data.words)) {
-          const withBlank = ["", ...data.words];
-          setItems(withBlank);
-          setCurrentIndex(0);
-          speakText("");
+        if (
+          Array.isArray(data.words) &&
+          JSON.stringify(data.words) !== JSON.stringify(words.slice(1))
+        ) {
+          const withBlank = ["", ...data.words]; // prepend blank
+          setWords(withBlank);
+          setCurrentIndex(0); // start at blank
+          speakText(""); // say nothing for blank
         }
       } catch (err) {
-        console.error("Failed to fetch items:", err);
+        console.error("Failed to fetch words:", err);
       }
     };
 
     if (gesture === "Open_Palm") {
-      fetchItems();
+      fetchWords();
     }
-  }, [gesture, mode, speakText]);
+  }, [gesture]);
 
-  // Navigation gestures (same as before)...
+  // -----------------------------
+  // 2. Respond to navigation gestures
+  // -----------------------------
   useEffect(() => {
-    if (!gesture || items.length === 0) return;
+    if (!gesture || words.length === 0) return;
 
     if (gesture === "Pointing_Up") {
       setCurrentIndex((prev) => {
-        if (prev < items.length - 1) {
+        if (prev < words.length - 1) {
           const newIndex = prev + 1;
-          speakText(items[newIndex]);
+          speakText(words[newIndex]);
           return newIndex;
         } else {
           speakText("End of text");
@@ -56,7 +58,7 @@ const Reader = ({ gesture }) => {
       setCurrentIndex((prev) => {
         if (prev > 0) {
           const newIndex = prev - 1;
-          speakText(items[newIndex]);
+          speakText(words[newIndex]);
           return newIndex;
         } else {
           speakText("Beginning of text");
@@ -64,24 +66,47 @@ const Reader = ({ gesture }) => {
         }
       });
     } else if (gesture === "O-Shape") {
-      speakText(items[currentIndex]);
+      speakText(words[currentIndex]);
     }
-  }, [gesture, items, speakText]);
+  }, [gesture, words]);
+
+  useEffect(() => {
+     if (!command || words.length === 0) return;
+
+    if (command === 'play') {
+      console.log("Play words")
+      setCurrentIndex((prev) => {
+        if (prev < words.length - 1) {
+          const newIndex = prev + 1;
+          speakText(words[newIndex]);
+          return newIndex;
+        } else {
+          speakText("End of text");
+          return prev;
+        }
+      });
+    } else if (command === 'back') {
+      setCurrentIndex((prev) => {
+        if (prev > 0) {
+          const newIndex = prev - 1;
+          speakText(words[newIndex]);
+          return newIndex;
+        } else {
+          speakText("Beginning of text");
+          return prev;
+        }
+      });
+    } else if (command = 'repeat') {
+      speakText(words[currentIndex]);
+    }
+
+  }, [words, command])
 
   return (
-    <div style={{ textAlign: "center", marginTop: "12px" }}>
-      <div style={{ marginBottom: "8px" }}>
-        <button onClick={() => setMode("words")} disabled={mode === "words"}>
-          Words
-        </button>
-        <button onClick={() => setMode("sentences")} disabled={mode === "sentences"}>
-          Sentences
-        </button>
-      </div>
-
+    <div style={{ textAlign: "center", marginTop: "12px" }} className="text-black text-2xl">
       <p>
-        Current:{" "}
-        <strong>{items[currentIndex] === "" ? "—" : items[currentIndex]}</strong>
+        Current word:{" "}
+        <strong>{words[currentIndex] === "" ? "—" : words[currentIndex]}</strong>
       </p>
     </div>
   );
