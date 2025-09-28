@@ -5,7 +5,7 @@ Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visual
 
 ---
 
-## Features
+## ✨ Features
 
 - Real-time camera capture and processing  
 - Hand gesture recognition (e.g. “point left”, “O”, open palm)  
