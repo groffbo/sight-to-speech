@@ -8,7 +8,6 @@ const SpeechController = dynamic(() => import("./components/SpeechController"), 
   ssr: false
 });
 
-
 export default function Page() {
   const [useGestures, setUseGestures] = useState(true)
   const [textRead, setTextRead] = useState("This is dummy data")
@@ -21,11 +20,9 @@ export default function Page() {
     if (!speechRef.current) return;
     // original behavior: start recording when NOT using gestures
     if (!useGestures) {
-      console.log("Starting Recording!");
       setIsRecording(true)
       speechRef.current.start();
     } else {
-      console.log("Stopping Recording");
       setIsRecording(false)
       speechRef.current.stop();
     }
@@ -40,7 +37,7 @@ export default function Page() {
   };
 
   return (
-<div className="min-h-screen animated-bg align-middle ">
+      <div className="min-h-screen animated-bg align-middle ">
         <h1 className="text-[#6fb7ff] font-extrabold xl:text-20xl lg:text-10xl md: text-7xl moirai-one-regular pt-15 pb-5 text-center">SightSpeech</h1>
         <SpeechController ref={speechRef} onResult={handleResult} onStateChange={handleStateChange} />
         <main className="items-center justify-center z-1">
