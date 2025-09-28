@@ -1,35 +1,51 @@
 from flask import Flask, request, jsonify
-from flask_cors import CORS
+# Assuming the new function is in a file named 'gemini_utils.py'
+# from gemini_utils import capture_and_send_to_gemini 
+# (For a single file, you don't need the import)
+from flask_cors import CORS 
 
 app = Flask(__name__)
-CORS(app)  # allow frontend requests
+CORS(app)
 
-# GET endpoint (Gemini placeholder)
-@app.route("/api/gemini-data", methods=["GET"])
-def gemini_data():
-    return jsonify({
-        "status": "success",
-        "results": {"text": "Example OCR text"}
-    })
+@app.route("/api/gemini", methods=["POST"])
+def gemini_endpoint():
+    data = request.get_json()
+    image = data.get("image")  # base64 data from frontend
+    prompt = data.get("prompt")
 
-# POST endpoint (frame upload placeholder)
-@app.route("/api/process-frame", methods=["POST"])
-def process_frame():
-    if "image" not in request.files:
-        return jsonify(error="No image uploaded"), 400
+    if not image or not prompt:
+        return jsonify({"error": "Both 'image' (base64) and 'prompt' are required"}), 400
 
-    image_file = request.files["image"]  # not used yet
-    return jsonify({
-        "status": "success",
-        "ocr_result": {"text": "Detected text from dummy OCR"}
-    })
+    try:
+        import base64
+        import cv2
+        import numpy as np
 
-@app.route("/api/get-text-to-read", methods=["GET"])
-def get_text_to_read():
-    # Example: replace with your logic for current word
-    return jsonify({"text": "Hello, this is a test from the backend"})
+        # --- Base64 to OpenCV Frame (This part is correct) ---
+        # The base64 data comes in the format: 'data:image/jpeg;base64,...'
+        # We need to strip the header.
+        if "," in image:
+            header, encoded = image.split(",", 1)
+        else:
+            encoded = image
 
+        img_bytes = base64.b64decode(encoded)
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        frame = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        # -----------------------------------------------------
+
+        # Call the new Gemini function
+        # The 'is_structured_output' is now redundant as the function is designed for it.
+        result = capture_and_send_to_gemini(frame, prompt) 
+        
+        # Ensure the result is always a list for the frontend
+        return jsonify(result if isinstance(result, list) else [str(result)])
+    
+    except Exception as e:
+        print(f"Endpoint Error: {e}")
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
-
+    # If using your provided code structure, make sure to handle 
+    # the environment variable for the API key: os.environ["GEMINI_API_KEY"] = "YOUR_KEY"
+    app.run(debug=True)
