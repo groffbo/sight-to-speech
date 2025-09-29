@@ -63,7 +63,7 @@ Based on MediaPipe, OCR, and custom gesture detection, this tool empowers visual
 
 ## 🖐 Gesture Mapping (Default)
 
-| Gesture         | Description / Use |
+| Gestures         | Descriptions / Use |
 | --------------- | ----------------- |
 | `Open_Palm`     | Start             |
 | `Closed_Fist`   | Description       |
