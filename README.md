@@ -6,6 +6,7 @@ SightSpeech is a two-part application:
 
 You should start the backend first, then run the frontend.
 
+
 ---
 
 ## Quick Start
