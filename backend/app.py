@@ -15,7 +15,7 @@ import threading
 
 
 # --- Gemini API Configuration ---
-API_KEY = "AIzaSyDJz9CzFTWejNGOBfDaVY8Vl9fIDsU5O9s" 
+API_KEY = "" 
 API_URL = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={API_KEY}"
 
 RESPONSE_SCHEMA = {
